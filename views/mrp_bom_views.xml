@@ -20,6 +20,7 @@
                         <field name="bom_id" invisible="1" />
                         <field name="allowed_product_attribute_ids" invisible="1" />
                         <field name="possible_template_attribute_value_ids" invisible="1" />
+                        <field name="possible_bom_product_template_attribute_value_ids" invisible="1" />
 
                         <field name="sequence" widget="handle" />
                         <field name="sequence_bis" />
@@ -31,6 +32,9 @@
                             groups="uom.group_uom" />
                         <field name="extra_attribute_value_ids" widget="many2many_tags"
                             domain="[('id', 'in', possible_template_attribute_value_ids)]" />
+                        <field name="bom_product_template_attribute_value_ids" widget="many2many_tags"
+                            domain="[('id', 'in', possible_bom_product_template_attribute_value_ids)]" />
+                        <!-- <field name="applicable_regexp"/> -->
                         <field name="ambiguous" widget="boolean_button" />
                     </tree>
                 </field>

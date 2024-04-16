@@ -8,14 +8,16 @@
                     <t t-set="variant" t-value="line['variant']" />
                     <t t-set="issues" t-value="line['issues']" />
                     <t t-set="alert_style">success</t>
+                    <t t-set="icon_type">check-circle</t>
                     <t t-if="len(issues) > 0">
-                        <t t-set="alert_style">failed</t>
-                    </t>
+                        <t t-set="alert_style">danger</t>
+                        <t t-set="icon_type">exclamation-triangle</t>
+                    </t>               
                     <li
-                        t-attf-class="list-group-item {{'list-group-item-success' if alert_style == 'success' else 'list-group-item-danger'}}">
+                        t-attf-class="list-group-item list-group-item-{{alert_style}}">
 
                         <i
-                            t-attf-class="fa {{'fa-check-circle' if alert_style == 'success' else 'fa-exclamation-triangle'}} px-2 pr-3" />
+                            t-attf-class="fa fa-{{icon_type}} px-2 pr-3" />
                         <a href="#" t-att-data-oe-model="variant._name"
                             t-att-data-oe-id="variant.id">
                             <t t-out="variant.display_name" />

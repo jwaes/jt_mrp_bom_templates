@@ -1,4 +1,5 @@
 import logging
+import re
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
@@ -20,6 +21,8 @@ class MrpBom(models.Model):
     related_bom_ids = fields.One2many('mrp.bom', 'bom_template_id', string='Related Bom')
 
     related_bom_count = fields.Integer(compute='_compute_related_bom_count', string='Related BoM Count')
+
+
     
     @api.depends('related_bom_ids')
     def _compute_related_bom_count(self):
@@ -49,7 +52,8 @@ class MrpBom(models.Model):
         if 'is_bom_template' in vals:
             if vals['is_bom_template']:
                 self.active = False
-                self.bom_template_id = None
+                self.bom_template_id = False
+                self.product_id = False
                 self.code = 'TEMPLATE'
 
         if 'product_id' in vals: 
@@ -111,39 +115,38 @@ class MrpBom(models.Model):
                         issues = []
 
                         for line in bom.bom_template_line_ids:
-                            prod = line._generate_bom_line(variant)
-                            if not prod:
-                                _logger.warning("No matching product found!")
-                                issues.append(line.template_id)
-                                
+                            
+                            applicable = True
+                            if line.bom_product_template_attribute_value_ids:
+                                applicable = len(line.bom_product_template_attribute_value_ids - variant.product_template_variant_value_ids) == 0
+
+                            # if line.applicable_regexp:
+                            #     pattern = re.compile(line.applicable_regexp)
+                            #     applicable = bool(pattern.match(variant.default_code))
+
+                            if applicable:  
+                                prod = line._generate_bom_line(variant)
+                                if not prod:
+                                    _logger.warning("No matching product found!")
+                                    issues.append(line.template_id)
+                                    
+                                else:
+                                    _logger.info("Creating BoM Line")
+
+                                    line_vals = {
+                                        'product_id': prod.id,
+                                        'product_qty': line.product_qty,
+                                        'product_uom_id': line.product_uom_id.id,
+                                        'sequence': line.sequence,
+                                        'bom_id': variant_bom.id,                                    
+                                    }
+
+                                    bom_line = self.env['mrp.bom.line'].create(line_vals)
                             else:
-                                _logger.info("Creating BoM Line")
+                                _logger.info("BoM Line not applicable")
 
-                                line_vals = {
-                                    'product_id': prod.id,
-                                    'product_qty': line.product_qty,
-                                    'product_uom_id': line.product_uom_id.id,
-                                    'sequence': line.sequence,
-                                    'bom_id': variant_bom.id,                                    
-                                }
+                        result.append({'variant': variant, 'applicable': True, 'issues':issues, 'message': None})
 
-                                bom_line = self.env['mrp.bom.line'].create(line_vals)
-
-                        # if issues:
-                            # variant_bom.message_post(body=issue_msg)
-                            # variant_bom.activity_schedule(
-                            #     'mail.mail_activity_data_todo',
-                            #     user_id=self.env.user.id,
-                            #     note=_('Fix BoM Issue')
-                            # )
-
-
-                        # hmm = variant_bom.activity_schedule('mail.mail_activity_data_warning',
-                        #     summary=summary, 
-                        #     note=note,
-                        #     )
-                        # variant_bom.message_post(body=summary)
-                        result.append({'variant': variant, 'issues':issues, 'message': None})
                 bom.message_post_with_view(
                     'jt_mrp_bom_templates.message_bom_template_result',
                     values={'result': result,},

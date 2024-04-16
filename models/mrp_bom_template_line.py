@@ -64,8 +64,17 @@ class MrpBomTemplateLine(models.Model):
 
     extra_attribute_value_ids = fields.Many2many('product.template.attribute.value', string='Extra Attribute Value', ondelete='restrict', domain="[('id', 'in', possible_template_attribute_value_ids)]")
 
+    applicable_regexp = fields.Char('Regexp', help="If filled in, only apply if the regexp matched the default_code of the product_id of to be created BoM")
+
     ambiguous = fields.Boolean(compute='_compute_ambiguous', string='Ambiguous')
     
+
+    possible_bom_product_template_attribute_value_ids = fields.Many2many(relation="bom_template_possible_rel", related='bom_id.possible_product_template_attribute_value_ids')
+    bom_product_template_attribute_value_ids = fields.Many2many(
+        'product.template.attribute.value', relation="bom_template_possible_rel2", string="Apply on Variants", ondelete='restrict',
+        domain="[('id', 'in', possible_bom_product_template_attribute_value_ids)]",
+        help="BOM Product Variants needed to apply this line.")
+
     @api.depends('template_id', 'allowed_product_attribute_ids')
     def _compute_possible_product_template_attribute_value_ids(self):
         for line in self:
