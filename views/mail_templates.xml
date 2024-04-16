@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="message_bom_template_result" name="BoM Template chatter">
+        <p>
+            <ul class="list-group">
+                <t t-foreach="result" t-as="line">
+                    <t t-set="variant" t-value="line['variant']" />
+                    <t t-set="issues" t-value="line['issues']" />
+                    <t t-set="alert_style">success</t>
+                    <t t-if="len(issues) > 0">
+                        <t t-set="alert_style">failed</t>
+                    </t>
+                    <li
+                        t-attf-class="list-group-item {{'list-group-item-success' if alert_style == 'success' else 'list-group-item-danger'}}">
+
+                        <i
+                            t-attf-class="fa {{'fa-check-circle' if alert_style == 'success' else 'fa-exclamation-triangle'}} px-2 pr-3" />
+                        <a href="#" t-att-data-oe-model="variant._name"
+                            t-att-data-oe-id="variant.id">
+                            <t t-out="variant.display_name" />
+                        </a>
+                        <ul>
+                            <li t-foreach="issues" t-as="issue">
+                                <a href="#" t-att-data-oe-model="issue._name"
+                                    t-att-data-oe-id="issue.id">
+                                    <span t-out="issue.display_name" />
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </t>
+            </ul>
+        </p>
+    </template>
+
+</odoo>
