@@ -114,6 +114,8 @@ class MrpBom(models.Model):
                         
                         issues = []
 
+                        lines_per_seq = bom.bom_template_line_ids.grouped('sequence_bis')
+
                         for line in bom.bom_template_line_ids:
                             
                             applicable = True
@@ -146,12 +148,14 @@ class MrpBom(models.Model):
                                 _logger.info("BoM Line not applicable")
 
                         result.append({'variant': variant, 'applicable': True, 'issues':issues, 'message': None})
-
+                source = False
+                if self.env.context.get('bom_gen_source'):
+                    source = self.env.context.get('bom_gen_source')
                 bom.message_post_with_view(
                     'jt_mrp_bom_templates.message_bom_template_result',
-                    values={'result': result,},
+                    values={'result': result, 'source': source},
                     subtype_id=self.env.ref('mail.mt_note').id)                                
-                foo = 2
+                # rec.with_context(bom_gen_source='Because Attribute Set changed')._generate_template_boms()
 
 
 class MrpBomLine(models.Model):

@@ -2,6 +2,8 @@
 <odoo>
 
     <template id="message_bom_template_result" name="BoM Template chatter">
+        <p  t-if="source"  t-out="source"/>
+
         <p>
             <ul class="list-group">
                 <t t-foreach="result" t-as="line">
