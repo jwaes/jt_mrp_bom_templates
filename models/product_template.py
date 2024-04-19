@@ -26,3 +26,4 @@ class ProductTemplate(models.Model):
         for rec in self:
             for bom in rec.bom_ids:
                 bom._generate_template_boms()
+                # rec.with_context(bom_gen_source='Because Attribute Set changed').generate_template_boms()

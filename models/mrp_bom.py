@@ -114,7 +114,7 @@ class MrpBom(models.Model):
                         
                         issues = []
 
-                        lines_per_seq = bom.bom_template_line_ids.grouped('sequence_bis')
+                        # lines_per_seq = bom.bom_template_line_ids.grouped('sequence_bis')
 
                         for line in bom.bom_template_line_ids:
                             
