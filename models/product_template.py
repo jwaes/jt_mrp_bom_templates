@@ -21,3 +21,8 @@ class ProductTemplate(models.Model):
         action['domain'] = ['&', ('product_tmpl_id', '=', self.id), ('is_bom_template', '=', True), ('active', '=', False)]
         return action
 
+
+    def generate_template_boms(self):
+        for rec in self:
+            for bom in rec.bom_ids:
+                bom._generate_template_boms()
