@@ -21,6 +21,7 @@
 
     # always loaded
     'data': [
+        'data/bom_template_data.xml',
         'security/ir.model.access.csv',
         'views/mail_templates.xml',
         'views/mrp_bom_views.xml',
