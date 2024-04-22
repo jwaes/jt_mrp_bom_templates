@@ -24,6 +24,23 @@ class ProductTemplate(models.Model):
 
     def generate_template_boms(self):
         for rec in self:
-            for bom in rec.bom_ids:
+            bom_templates = self.env['mrp.bom'].search(['&', ('product_tmpl_id', '=', rec.id), ('is_bom_template', '=', True), ('active', '=', False)])
+            for bom in bom_templates:
                 bom._generate_template_boms()
                 # rec.with_context(bom_gen_source='Because Attribute Set changed').generate_template_boms()
+
+    def funky_trigger(self):
+        _logger.info('################ TRIGGER ####################')
+
+    def _create_variant_ids(self):
+        _logger.info('################ BEFORE CREATE VARIANT ####################')
+        res = super()._create_variant_ids()
+        if res:
+            _logger.info('################ CREATE VARIANT ####################')
+            self.generate_template_boms()
+        return res
+
+    def write(self, vals):
+        _logger.info('################ BEFORE WRITE ####################')
+        return super().write(vals)
+    
