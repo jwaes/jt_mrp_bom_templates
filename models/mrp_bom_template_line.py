@@ -8,7 +8,7 @@ class MrpBomTemplateLine(models.Model):
     _name = 'mrp.bom.template.line'
     _description = 'Mrp Bom Template Line'
     _rec_name = "template_id"
-    _order = 'sequence_bis, id'
+    _order = 'sequence, id'
 
     # _order = "sequence, id"
     _check_company_auto = True
