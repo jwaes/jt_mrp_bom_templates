@@ -162,13 +162,13 @@ class MrpBom(models.Model):
                                     _logger.info("Existing Line from tepmplate line [%s] found", existing_line.template_bom_line_id.id)
                                     all_vals = line.copy_data()[0]
                                     all_vals.update(line_vals)
-                                    all_vals.update(line_vals)
-                                    all_vals['bom_product_template_attribute_value_ids'] = False
+                                    all_vals['bom_product_template_attribute_value_ids'] = []
                                     existing_line.write(all_vals)
                                     variant_bom_line = existing_line
                                     _logger.info("Updated Line from template line [%s] for product %s", variant_bom_line.template_bom_line_id.id, variant_bom_line.product_id.name)
                                     obsolete_lines = obsolete_lines - variant_bom_line
-                            else:                                
+                            else:     
+                                line_vals['bom_product_template_attribute_value_ids'] = []                           
                                 variant_bom_line = line.copy(line_vals)
                                 _logger.info("Create Line from template line [%s] for product %s", variant_bom_line.template_bom_line_id.id, variant_bom_line.product_id.name)
                             
