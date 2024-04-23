@@ -247,7 +247,9 @@ class MrpBom(models.Model):
                                     # Do not raise issue if there is an explicit exlude
                                     if line.bom_product_template_excl_attribute_value_ids:
                                         if len(line.bom_product_template_excl_attribute_value_ids - variant.product_template_variant_value_ids) < len(line.bom_product_template_excl_attribute_value_ids):
+                                            _logger.info("skipping - excluded")
                                             continue
+                                    _logger.info("not excluded - issue !")
                                     issues.append(line.template_id)
 
 
