@@ -234,10 +234,11 @@ class MrpBom(models.Model):
                         if len(to_be_resolved_seq) > 0:
                             _logger.info("Not all Lines resolved")
                             for seq in to_be_resolved_seq:
-                                # issues.append(line.template_id)
                                 concerned_lines = bom.bom_template_line_ids.filtered(lambda r : r.sequence_bis == seq)
                                 for line in concerned_lines:
-                                    issues.append(line.template_id)
+                                    # Do not raise issue if there is an explicit exlude
+                                    if line.bom_product_template_excl_attribute_value_ids and len(line.bom_product_template_excl_attribute_value_ids - variant.product_template_variant_value_ids) < line.bom_product_template_excl_attribute_value_ids:
+                                        issues.append(line.template_id)
 
 
                         variant_bom.bom_line_ids.filtered(lambda r: r.bom_template_line_id and r.bom_template_line_id not in bom.bom_template_line_ids).unlink()
