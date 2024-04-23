@@ -23,7 +23,7 @@
                         <field name="possible_bom_product_template_attribute_value_ids" invisible="1" />
 
                         <field name="sequence" widget="handle" />
-                        <field name="sequence_bis" attrs="{'invisible': [('is_bom_template', '=', False)]}"/>
+                        <field name="sequence_bis"/>
                         <field name="template_id"
                             domain="[('attribute_line_ids.attribute_id', 'in', allowed_product_attribute_ids)]" />
                         <field name="product_qty" />
