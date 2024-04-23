@@ -172,19 +172,42 @@ class MrpBom(models.Model):
                         
                         issues = []
 
+                        # foo = bom.bom_template_line_ids
+                        # grouped = foo.read_group([], fields=['id'], group_by=['sequence_bis'])
+
+                        to_be_resolved_seq = list(set(bom.bom_template_line_ids.mapped('sequence_bis')))
+
                         for line in bom.bom_template_line_ids:
+
+                            if line.sequence_bis not in to_be_resolved_seq:
+                                _logger.info("BoM Line already matched for line sequence %s", line.sequence_bis)
+                                continue
                             
                             applicable = True
                             if line.bom_product_template_attribute_value_ids:
                                 applicable = len(line.bom_product_template_attribute_value_ids - variant.product_template_variant_value_ids) == 0
+                                _logger.info("BoM Line explicitly included")
+
+                            if line.bom_product_template_excl_attribute_value_ids:
+                                init_len = len(line.bom_product_template_excl_attribute_value_ids)
+                                calculated_len = len(line.bom_product_template_excl_attribute_value_ids - variant.product_template_variant_value_ids)
+                                applicable = (calculated_len == init_len)
+                                _logger.info("BoM Line explicitly excluded")
+
+                            # if line.applicable_regexp:
+                            #     appl = bool(re.search(line.applicable_regexp, ))
+
 
                             if applicable:  
                                 prod = line._generate_bom_line(variant)
                                 if not prod:
-                                    _logger.warning("No matching product found!")
-                                    issues.append(line.template_id)
-                                    
+                                    if not line.optional:
+                                        _logger.warning("No matching product found!")
+                                        issues.append(line.template_id)
                                 else:
+
+                                    to_be_resolved_seq.remove(line.sequence_bis)
+                                    
                                     _logger.info("Creating BoM Line")
 
                                     line_vals = {
