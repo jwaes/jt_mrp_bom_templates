@@ -244,7 +244,7 @@ class MrpBom(models.Model):
                                 concerned_lines = bom.bom_template_line_ids.filtered(lambda r : r.sequence_bis == seq)
                                 for line in concerned_lines:
                                     # Do not raise issue if there is an explicit exlude
-                                    if line.bom_product_template_excl_attribute_value_ids and len(line.bom_product_template_excl_attribute_value_ids - variant.product_template_variant_value_ids) < line.bom_product_template_excl_attribute_value_ids:
+                                    if line.bom_product_template_excl_attribute_value_ids and len(line.bom_product_template_excl_attribute_value_ids - variant.product_template_variant_value_ids) < len(line.bom_product_template_excl_attribute_value_ids):
                                         issues.append(line.template_id)
 
 
