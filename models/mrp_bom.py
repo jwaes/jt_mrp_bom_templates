@@ -118,8 +118,6 @@ class MrpBom(models.Model):
                         if len(template_boms) == 1:
                             update = True
                             _logger.info("Templated BoM already exists ... needs updating")
-                            # _logger.info("Templated BoM already exists ... re-creating")
-                            # template_boms.unlink()
                         else :
                             _logger.info("No templated BoM found ... creating")
 
@@ -134,19 +132,39 @@ class MrpBom(models.Model):
 
                         if update:
                             variant_bom = template_boms[:1]
-                            variant_bom.bom_line_ids.unlink()
                             variant_bom.write(variant_bom_vals)
-                            for line in bom.bom_line_ids:
-                                line_vals = {
-                                    'bom_id': variant_bom.id,                                         
-                                }
-                                variant_bom_line = line.copy(line_vals)
-                            
+                            _logger.info("Updated variant_bom [%s]", variant_bom.id)
                         else:
+                            variant_bom_vals['bom_line_ids'] = False
                             variant_bom = bom.copy(variant_bom_vals)
+                            _logger.info("Created variant_bom [%s]", variant_bom.id)
 
-                        # bom_msg = _("This BoM has been created from BoM Template")
-                        # variant_bom.message_post(body=bom_msg)
+                        obsolete_lines = variant_bom.bom_line_ids
+
+                        for line in bom.bom_line_ids:
+                            _logger.info("Template BoM Line for %s ", line.product_id.name)
+                            existing_line = None
+                            if variant_bom.bom_line_ids:
+                                existing_line = variant_bom.bom_line_ids.filtered(lambda r: r.template_bom_line_id.id == line.id)
+                            line_vals = {
+                                'bom_id': variant_bom.id,
+                                'template_bom_line_id': line.id,
+                            }
+                            variant_bom_line = None
+                            if existing_line is not None and len(existing_line) == 1:
+                                    _logger.info("Existing Line from tepmplate line [%s] found", existing_line.template_bom_line_id.id)
+                                    all_vals = line.copy_data()[0]
+                                    all_vals.update(line_vals)
+                                    existing_line.write(all_vals)
+                                    variant_bom_line = existing_line
+                                    _logger.info("Updated Line from template line [%s] for product %s", variant_bom_line.template_bom_line_id.id, variant_bom_line.product_id.name)
+                                    obsolete_lines = obsolete_lines - variant_bom_line
+                            else:                                
+                                variant_bom_line = line.copy(line_vals)
+                                _logger.info("Create Line from template line [%s] for product %s", variant_bom_line.template_bom_line_id.id, variant_bom_line.product_id.name)
+                            
+                        obsolete_lines.unlink()
+
                         variant_bom.message_post_with_view(
                             'mail.message_origin_link',
                             values={'self': variant_bom, 'origin': bom, 'edit': update},
@@ -154,17 +172,11 @@ class MrpBom(models.Model):
                         
                         issues = []
 
-                        # lines_per_seq = bom.bom_template_line_ids.grouped('sequence_bis')
-
                         for line in bom.bom_template_line_ids:
                             
                             applicable = True
                             if line.bom_product_template_attribute_value_ids:
                                 applicable = len(line.bom_product_template_attribute_value_ids - variant.product_template_variant_value_ids) == 0
-
-                            # if line.applicable_regexp:
-                            #     pattern = re.compile(line.applicable_regexp)
-                            #     applicable = bool(pattern.match(variant.default_code))
 
                             if applicable:  
                                 prod = line._generate_bom_line(variant)
@@ -180,12 +192,24 @@ class MrpBom(models.Model):
                                         'product_qty': line.product_qty,
                                         'product_uom_id': line.product_uom_id.id,
                                         'sequence': line.sequence,
-                                        'bom_id': variant_bom.id,                                    
+                                        'bom_id': variant_bom.id,
+                                        'bom_template_line_id': line.id,
                                     }
+                                    
+                                    existing_line = variant_bom.bom_line_ids.filtered(lambda r: r.bom_template_line_id.id == line.id)
 
-                                    bom_line = self.env['mrp.bom.line'].create(line_vals)
+                                    if existing_line is not None and len(existing_line) == 1:
+                                        _logger.info("Existing Line from bom tepmplate line [%s] found", existing_line.template_bom_line_id.id)
+                                        existing_line.write(line_vals)
+                                        variant_bom_line = existing_line
+                                        _logger.info("Updated Line from template line [%s] for product %s", variant_bom_line.template_bom_line_id.id, variant_bom_line.product_id.name)
+                                    else:                                
+                                        variant_bom_line = self.env['mrp.bom.line'].create(line_vals)
+                                        _logger.info("Created Line from bom template line [%s] for product %s", variant_bom_line.template_bom_line_id.id, variant_bom_line.product_id.name)
                             else:
                                 _logger.info("BoM Line not applicable")
+
+                        variant_bom.bom_line_ids.filtered(lambda r: r.bom_template_line_id and r.bom_template_line_id not in bom.bom_template_line_ids).unlink()
 
                         result.append({'variant': variant, 'applicable': True, 'issues':issues, 'message': None})
                 source = False
@@ -195,7 +219,6 @@ class MrpBom(models.Model):
                     'jt_mrp_bom_templates.message_bom_template_result',
                     values={'result': result, 'source': source},
                     subtype_id=self.env.ref('mail.mt_note').id)                                
-                # rec.with_context(bom_gen_source='Because Attribute Set changed')._generate_template_boms()
 
     def obsolete(self):
         for bom in self:
@@ -212,6 +235,10 @@ class MrpBomLine(models.Model):
     parent_is_template = fields.Boolean('parent_is_template', related="bom_id.is_bom_template", default=False)
 
     sequence_bis = fields.Integer(compute='_compute_sequence_bis', inverse='_inverse_sequence_bis', string='Sequence')
+
+    template_bom_line_id = fields.Many2one('mrp.bom.line', string='template_bom_line')
+
+    bom_template_line_id = fields.Many2one('mrp.bom.template.line', string='bom_template_line')
     
     @api.depends('sequence')
     def _compute_sequence_bis(self):
@@ -230,13 +257,16 @@ class MrpBomLine(models.Model):
                     if product_id:
                         product_id = self.env["product.product"].browse(product_id)
                     product_id = product_id or lines.product_id
+
+                    lines = lines.filtered(lambda l: l.product_id.id != product_id.id)
+
                     if lines:
                         bom.message_post_with_view(
                             "jt_mrp_bom_templates.track_bom_template_2",
                             values={"lines": lines, "product_id": product_id},
                             subtype_id=self.env.ref("mail.mt_note").id,
                         )
-            elif "product_qty" in values or "product_uom_id" in values:
+            if "product_qty" in values or "product_uom_id" in values:
                 for bom in self.mapped("bom_id"):
                     lines = self.filtered(lambda l: l.bom_id == bom)
                     if lines:
@@ -245,13 +275,16 @@ class MrpBomLine(models.Model):
                         if product_uom_id:
                             product_uom_id = self.env["uom.uom"].browse(product_uom_id)
                         product_uom_id = product_uom_id or lines.product_uom_id
-                        bom.message_post_with_view(
-                            "jt_mrp_bom_templates.track_bom_line_template",
-                            values={
-                                "lines": lines,
-                                "product_qty": product_qty,
-                                "product_uom_id": product_uom_id,
-                            },
-                            subtype_id=self.env.ref("mail.mt_note").id,
-                        )
+
+                        lines = lines.filtered(lambda r: r.product_qty != product_qty or r.product_uom_id != product_uom_id)
+                        if lines:
+                            bom.message_post_with_view(
+                                "jt_mrp_bom_templates.track_bom_line_template",
+                                values={
+                                    "lines": lines,
+                                    "product_qty": product_qty,
+                                    "product_uom_id": product_uom_id,
+                                },
+                                subtype_id=self.env.ref("mail.mt_note").id,
+                            )
             return super(MrpBomLine, self).write(values)                
