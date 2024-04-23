@@ -8,6 +8,7 @@ class MrpBomTemplateLine(models.Model):
     _name = 'mrp.bom.template.line'
     _description = 'Mrp Bom Template Line'
     _rec_name = "template_id"
+    _order = 'sequence_bis, id'
 
     # _order = "sequence, id"
     _check_company_auto = True
@@ -35,7 +36,7 @@ class MrpBomTemplateLine(models.Model):
         'Sequence', default=10,
         help="Gives the sequence order when displaying.")    
 
-    sequence_bis = fields.Integer(compute='_compute_sequence_bis', inverse='_inverse_sequence_bis', string='Sequence')
+    sequence_bis = fields.Integer(compute='_compute_sequence_bis', inverse='_inverse_sequence_bis', string='Sequence*')
     
     @api.depends('sequence')
     def _compute_sequence_bis(self):

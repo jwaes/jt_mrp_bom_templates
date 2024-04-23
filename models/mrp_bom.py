@@ -176,9 +176,7 @@ class MrpBom(models.Model):
                         # grouped = foo.read_group([], fields=['id'], group_by=['sequence_bis'])
 
                         to_be_resolved_seq = list(set(bom.bom_template_line_ids.mapped('sequence_bis')))
-
                         for line in bom.bom_template_line_ids:
-
                             if line.sequence_bis not in to_be_resolved_seq:
                                 _logger.info("BoM Line already matched for line sequence %s", line.sequence_bis)
                                 continue
@@ -198,12 +196,13 @@ class MrpBom(models.Model):
                             #     appl = bool(re.search(line.applicable_regexp, ))
 
 
+
                             if applicable:  
                                 prod = line._generate_bom_line(variant)
                                 if not prod:
                                     if not line.optional:
                                         _logger.warning("No matching product found!")
-                                        issues.append(line.template_id)
+                                        # issues.append(line.template_id)                                    
                                 else:
 
                                     to_be_resolved_seq.remove(line.sequence_bis)
@@ -228,9 +227,18 @@ class MrpBom(models.Model):
                                         _logger.info("Updated Line from template line [%s] for product %s", variant_bom_line.template_bom_line_id.id, variant_bom_line.product_id.name)
                                     else:                                
                                         variant_bom_line = self.env['mrp.bom.line'].create(line_vals)
-                                        _logger.info("Created Line from bom template line [%s] for product %s", variant_bom_line.template_bom_line_id.id, variant_bom_line.product_id.name)
+                                        _logger.info("Created Line from bom template line [%s] for product %s", line.id, variant_bom_line.product_id.name)
                             else:
                                 _logger.info("BoM Line not applicable")
+                        
+                        if len(to_be_resolved_seq) > 0:
+                            _logger.info("Not all Lines resolved")
+                            for seq in to_be_resolved_seq:
+                                # issues.append(line.template_id)
+                                concerned_lines = bom.bom_template_line_ids.filtered(lambda r : r.sequence_bis == seq)
+                                for line in concerned_lines:
+                                    issues.append(line.template_id)
+
 
                         variant_bom.bom_line_ids.filtered(lambda r: r.bom_template_line_id and r.bom_template_line_id not in bom.bom_template_line_ids).unlink()
 
@@ -255,9 +263,9 @@ class MrpBom(models.Model):
 class MrpBomLine(models.Model):
     _inherit = 'mrp.bom.line'
 
-    parent_is_template = fields.Boolean('parent_is_template', related="bom_id.is_bom_template", default=False)
+    parent_is_template = fields.Boolean('parent_is_template', related="bom_id.is_bom_template")
 
-    sequence_bis = fields.Integer(compute='_compute_sequence_bis', inverse='_inverse_sequence_bis', string='Sequence')
+    sequence_bis = fields.Integer(compute='_compute_sequence_bis', inverse='_inverse_sequence_bis', string='Sequence*')
 
     template_bom_line_id = fields.Many2one('mrp.bom.line', string='template_bom_line')
 
