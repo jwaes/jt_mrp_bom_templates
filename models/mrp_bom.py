@@ -141,7 +141,14 @@ class MrpBom(models.Model):
 
                         obsolete_lines = variant_bom.bom_line_ids
 
-                        for line in bom.bom_line_ids:
+                        for line in bom.bom_line_ids:                            
+                            if line.bom_product_template_attribute_value_ids:
+                                init_len = len(line.bom_product_template_attribute_value_ids)
+                                calculated_len = len(line.bom_product_template_attribute_value_ids - variant.product_template_variant_value_ids)
+                                if calculated_len == init_len:
+                                    _logger.info("Template BoM Line for %s NOT Applicable", line.product_id.name)
+                                    continue
+
                             _logger.info("Template BoM Line for %s ", line.product_id.name)
                             existing_line = None
                             if variant_bom.bom_line_ids:
