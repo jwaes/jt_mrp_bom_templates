@@ -216,7 +216,7 @@ class MrpBom(models.Model):
 
                                     to_be_resolved_seq.remove(line.sequence_bis)
                                     
-                                    _logger.info("Creating BoM Line")
+                                    _logger.info("Creating / Updating BoM Line")
 
                                     line_vals = {
                                         'product_id': prod.id,
