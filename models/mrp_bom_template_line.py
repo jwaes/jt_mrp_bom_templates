@@ -148,5 +148,10 @@ class MrpBomTemplateLine(models.Model):
         res = super().write(vals)
         return res
 
+    @api.onchange('template_id')
+    def onchange_template_id(self):
+        if self.template_id:
+            self.product_uom_id = self.template_id.uom_id.id        
+
 
 
