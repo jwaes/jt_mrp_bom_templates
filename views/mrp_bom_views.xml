@@ -1,70 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <record id="mrp_bom_form_view_inherit_mrp_bom_templates" model="ir.ui.view">
-        <field name="name">mrp.bom.view.form.inherit</field>
-        <field name="model">mrp.bom</field>
-        <field name="inherit_id" ref="mrp.mrp_bom_form_view" />
-        <field name="arch" type="xml">
-            <field name="type" position="after">
-                <field name="is_bom_template" attrs="{'invisible': [('bom_template_id', '!=', False)]}" />
-                <field name="bom_template_id" attrs="{'invisible': [('is_bom_template', '=', True)]}" />
-            </field>
-
-            <xpath expr="//page[@name='components']" position="inside">
-                <field name="bom_template_line_ids" widget="one2many"
-                    context="{'default_template_id': False, 'default_bom_id': id}"
-                    attrs="{'invisible': [('is_bom_template', '=', False)]}">
-                    <tree string="Template Components" editable="bottom">
-                        <field name="company_id" invisible="1" />
-                        <field name="bom_id" invisible="1" />
-                        <field name="allowed_product_attribute_ids" invisible="1" />
-                        <field name="possible_template_attribute_value_ids" invisible="1" />
-                        <field name="possible_bom_product_template_attribute_value_ids" invisible="1" />
-
-                        <field name="sequence" widget="handle" />
-                        <field name="sequence_bis"/>
-                        <field name="template_id"
-                            domain="[('attribute_line_ids.attribute_id', 'in', allowed_product_attribute_ids)]" />
-                        <field name="product_qty" />
-                        <field name="product_uom_category_id" invisible="1" />
-                        <field name="product_uom_id" options="{'no_open':True,'no_create':True}"
-                            groups="uom.group_uom" />
-                        <field name="extra_attribute_value_ids" widget="many2many_tags"
-                            domain="[('id', 'in', possible_template_attribute_value_ids)]" />
-                        <field name="bom_product_template_attribute_value_ids" widget="many2many_tags"
-                            domain="[('id', 'in', possible_bom_product_template_attribute_value_ids)]" />
-                        <field name="bom_product_template_excl_attribute_value_ids" widget="many2many_tags"
-                            domain="[('id', 'in', possible_bom_product_template_attribute_value_ids)]" />
-                        <field name="optional" />
-                        <!-- <field name="applicable_regexp"/> -->
-                        <field name="ambiguous" widget="boolean_button" />
-                    </tree>
-                </field>
-            </xpath>
-
-
-            <xpath expr="//div[@name='button_box']" position="inside">
-                <button class="oe_stat_button" name="action_related_bom" type="object"
-                    icon="fa-flask" attrs="{'invisible': [('is_bom_template', '=', False)]}">
-                    <field string="Related BoM" name="related_bom_count" widget="statinfo" />
-                </button>
-            </xpath>
-
-            <xpath expr="//page[@name='components']//field[@name='sequence']" position="after">
-                <field name="parent_is_template" invisible="1" />
-                <field name="sequence_bis" attrs="{'invisible': [('parent_is_template', '=', False)]}"  />
-            </xpath>
-
-            <xpath expr="//widget[@name='web_ribbon']" position="after">
-                <widget name="web_ribbon" title="Generated" bg_color="bg-info" attrs="{'invisible': [('bom_template_id', '=', False)]}"/>
-            </xpath>
-            <xpath expr="//widget[@name='web_ribbon']" position="after">
-                <widget name="web_ribbon" title="Template" bg_color="bg-info" attrs="{'invisible': [('is_bom_template', '=', False)]}"/>
-            </xpath>            
-
-        </field>
-    </record>
-
-
+ <record id="mrp_bom_form_view_inherit_mrp_bom_templates" model="ir.ui.view">
+  <field name="name">mrp.bom.view.form.inherit</field>
+  <field name="model">mrp.bom</field>
+  <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+  <field name="arch" type="xml">
+   <field name="type" position="after">
+    <field invisible="bom_template_id != False" name="is_bom_template"/>
+    <field invisible="is_bom_template == True" name="bom_template_id"/></field>
+   <xpath expr="//page[@name='components']" position="inside">
+    <field context="{'default_template_id': False, 'default_bom_id': id}" invisible="is_bom_template == False" name="bom_template_line_ids" widget="one2many">
+     <tree editable="bottom" string="Template Components">
+      <field invisible="1" name="company_id"/>
+      <field invisible="1" name="bom_id"/>
+      <field invisible="1" name="allowed_product_attribute_ids"/>
+      <field invisible="1" name="possible_template_attribute_value_ids"/>
+      <field invisible="1" name="possible_bom_product_template_attribute_value_ids"/>
+      <field name="sequence" widget="handle"/>
+      <field name="sequence_bis"/>
+      <field domain="[('attribute_line_ids.attribute_id', 'in', allowed_product_attribute_ids)]" name="template_id"/>
+      <field name="product_qty"/>
+      <field invisible="1" name="product_uom_category_id"/>
+      <field groups="uom.group_uom" name="product_uom_id" options="{'no_open':True,'no_create':True}"/>
+      <field domain="[('id', 'in', possible_template_attribute_value_ids)]" name="extra_attribute_value_ids" widget="many2many_tags"/>
+      <field domain="[('id', 'in', possible_bom_product_template_attribute_value_ids)]" name="bom_product_template_attribute_value_ids" widget="many2many_tags"/>
+      <field domain="[('id', 'in', possible_bom_product_template_attribute_value_ids)]" name="bom_product_template_excl_attribute_value_ids" widget="many2many_tags"/>
+      <field name="optional"/>
+      <!-- <field name="applicable_regexp"/> -->
+      <field name="ambiguous" widget="boolean_button"/>
+     </tree></field>
+   </xpath>
+   <xpath expr="//div[@name='button_box']" position="inside">
+    <button class="oe_stat_button" icon="fa-flask" invisible="is_bom_template == False" name="action_related_bom" type="object">
+     <field name="related_bom_count" string="Related BoM" widget="statinfo"/>
+    </button>
+   </xpath>
+   <xpath expr="//page[@name='components']//field[@name='sequence']" position="after">
+    <field invisible="1" name="parent_is_template"/>
+    <field invisible="parent_is_template == False" name="sequence_bis"/>
+   </xpath>
+   <xpath expr="//widget[@name='web_ribbon']" position="after">
+    <widget bg_color="bg-info" invisible="bom_template_id == False" name="web_ribbon" title="Generated"/>
+   </xpath>
+   <xpath expr="//widget[@name='web_ribbon']" position="after">
+    <widget bg_color="bg-info" invisible="is_bom_template == False" name="web_ribbon" title="Template"/>
+   </xpath></field>
+ </record>
 </odoo>
