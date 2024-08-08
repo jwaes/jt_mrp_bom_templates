@@ -61,13 +61,14 @@ class MrpBom(models.Model):
                     if line[0] == 2:
                         del_lines.append(line[1])
                 if del_lines:
-                    bom.message_post_with_view(
+                    
+                    bom.message_post_with_source(
                         "jt_mrp_bom_templates.track_bom_template",
-                        values={
+                        render_values={
                             "lines": self.env["mrp.bom.line"].browse(del_lines),
                             "mode": "Removed",
                         },
-                        subtype_id=self.env.ref("mail.mt_note").id,
+                        subtype_xmlid='mail.mt_note',
                     )
                 bom_line_ids[bom.id] = bom.bom_line_ids
 
@@ -84,10 +85,10 @@ class MrpBom(models.Model):
             for bom in self:
                 new_lines = bom.bom_line_ids - bom_line_ids[bom.id]
                 if new_lines:
-                    bom.message_post_with_view(
+                    bom.message_post_with_source(
                         "jt_mrp_bom_templates.track_bom_template",
-                        values={"lines": new_lines, "mode": "New"},
-                        subtype_id=self.env.ref("mail.mt_note").id,
+                        render_values={"lines": new_lines, "mode": "New"},
+                        subtype_xmlid='mail.mt_note',
                     )
         return res
 
@@ -174,10 +175,11 @@ class MrpBom(models.Model):
                             
                         obsolete_lines.unlink()
 
-                        variant_bom.message_post_with_view(
+                        variant_bom.message_post_with_source(
                             'mail.message_origin_link',
-                            values={'self': variant_bom, 'origin': bom, 'edit': update},
-                            subtype_id=self.env.ref('mail.mt_note').id)                  
+                            render_values={'self': variant_bom, 'origin': bom, 'edit': update},
+                            subtype_xmlid='mail.mt_note',
+                            )                  
                         
                         issues = []
 
@@ -261,10 +263,11 @@ class MrpBom(models.Model):
                 source = False
                 if self.env.context.get('bom_gen_source'):
                     source = self.env.context.get('bom_gen_source')
-                bom.message_post_with_view(
+                bom.message_post_with_source(
                     'jt_mrp_bom_templates.message_bom_template_result',
-                    values={'result': result, 'source': source},
-                    subtype_id=self.env.ref('mail.mt_note').id)                                
+                    render_values={'result': result, 'source': source},
+                    subtype_xmlid='mail.mt_note',
+                    )                                
 
     def obsolete(self):
         for bom in self:
@@ -307,10 +310,10 @@ class MrpBomLine(models.Model):
                     lines = lines.filtered(lambda l: l.product_id.id != product_id.id)
 
                     if lines:
-                        bom.message_post_with_view(
+                        bom.message_post_with_source(
                             "jt_mrp_bom_templates.track_bom_template_2",
-                            values={"lines": lines, "product_id": product_id},
-                            subtype_id=self.env.ref("mail.mt_note").id,
+                            render_values={"lines": lines, "product_id": product_id},
+                            subtype_xmlid='mail.mt_note',
                         )
             if "product_qty" in values or "product_uom_id" in values:
                 for bom in self.mapped("bom_id"):
@@ -324,13 +327,13 @@ class MrpBomLine(models.Model):
 
                         lines = lines.filtered(lambda r: r.product_qty != product_qty or r.product_uom_id != product_uom_id)
                         if lines:
-                            bom.message_post_with_view(
+                            bom.message_post_with_source(
                                 "jt_mrp_bom_templates.track_bom_line_template",
-                                values={
+                                render_values={
                                     "lines": lines,
                                     "product_qty": product_qty,
                                     "product_uom_id": product_uom_id,
                                 },
-                                subtype_id=self.env.ref("mail.mt_note").id,
+                                subtype_xmlid='mail.mt_note',
                             )
             return super(MrpBomLine, self).write(values)                
