@@ -13,17 +13,12 @@
         <field context="{'default_template_id': False, 'default_bom_id': id}"
           invisible="is_bom_template == False" name="bom_template_line_ids" widget="one2many">
           <list editable="bottom" string="Template Components">
-            <field invisible="1" name="company_id" />
-            <field invisible="1" name="allowed_product_attribute_ids" />
-            <field invisible="1" name="possible_template_attribute_value_ids" />
-            <field invisible="1" name="possible_bom_product_template_attribute_value_ids" />
             <field name="sequence" widget="handle" />
             <field name="sequence_bis" />
             <field
               domain="[('attribute_line_ids.attribute_id', 'in', allowed_product_attribute_ids)]"
               name="template_id" />
             <field name="product_qty" />
-            <field invisible="1" name="product_uom_category_id" />
             <field groups="uom.group_uom" name="product_uom_id"
               options="{'no_open':True,'no_create':True}" />
             <field domain="[('id', 'in', possible_template_attribute_value_ids)]"
@@ -45,7 +40,6 @@
         </button>
       </xpath>
       <xpath expr="//page[@name='components']//field[@name='sequence']" position="after">
-        <field invisible="1" name="parent_is_template" />
         <field invisible="parent_is_template == False" name="sequence_bis" />
       </xpath>
       <xpath expr="//widget[@name='web_ribbon']" position="after">
