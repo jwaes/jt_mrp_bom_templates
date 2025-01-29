@@ -10,7 +10,7 @@
     <field invisible="is_bom_template == True" name="bom_template_id"/></field>
    <xpath expr="//page[@name='components']" position="inside">
     <field context="{'default_template_id': False, 'default_bom_id': id}" invisible="is_bom_template == False" name="bom_template_line_ids" widget="one2many">
-     <tree editable="bottom" string="Template Components">
+     <list editable="bottom" string="Template Components">
       <field invisible="1" name="company_id"/>
       <field invisible="1" name="bom_id"/>
       <field invisible="1" name="allowed_product_attribute_ids"/>
@@ -28,7 +28,7 @@
       <field name="optional"/>
       <!-- <field name="applicable_regexp"/> -->
       <field name="ambiguous" widget="boolean_button"/>
-     </tree></field>
+     </list></field>
    </xpath>
    <xpath expr="//div[@name='button_box']" position="inside">
     <button class="oe_stat_button" icon="fa-flask" invisible="is_bom_template == False" name="action_related_bom" type="object">
