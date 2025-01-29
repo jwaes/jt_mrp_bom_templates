@@ -161,7 +161,7 @@ class MrpBom(models.Model):
                             variant_bom_line = None
                             if existing_line is not None and len(existing_line) == 1:
                                     _logger.info("Existing Line from tepmplate line [%s] found", existing_line.template_bom_line_id.id)
-                                    all_vals = line.copy_data()[0]
+                                    all_vals = line.copy_data()
                                     all_vals.update(line_vals)
                                     all_vals['bom_product_template_attribute_value_ids'] = []
                                     existing_line.write(all_vals)
